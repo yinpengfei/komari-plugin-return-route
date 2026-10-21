@@ -24,7 +24,6 @@ import (
 	"github.com/komari-monitor/komari/internal/plugin"
 	"github.com/komari-monitor/komari/pkg/rpc"
 	"github.com/komari-monitor/komari/utils"
-	adminapi "github.com/komari-monitor/komari/web/api/admin"
 )
 
 type fixture struct {
@@ -79,7 +78,12 @@ func newFixture(archive string, themeDirs ...string) (*fixture, error) {
 			c.AbortWithStatus(401)
 			return
 		}
-		adminapi.ServePluginFile(c)
+		full, e := plugin.ResolveFile(c.Param("short"), strings.TrimPrefix(c.Param("filepath"), "/"))
+		if e != nil {
+			c.AbortWithStatus(404)
+			return
+		}
+		c.File(full)
 	})
 	fixtures := []map[string]any{{"uuid": "node-a", "name": "Oracle JP · 本地测试", "os": "Linux", "arch": "amd64", "hidden": false, "token": "DO_NOT_EXPOSE_NODE_TOKEN"}, {"uuid": "node-b", "name": "Oracle ARM · 隐藏测试节点", "os": "Linux", "arch": "arm64", "hidden": true}, {"uuid": "node-c", "name": "关闭远控 · 测试节点", "os": "Linux", "arch": "amd64", "hidden": false}}
 	for _, n := range fixtures {
