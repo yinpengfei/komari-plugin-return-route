@@ -53,7 +53,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: return-route-${{ runner.arch }}
-          path: return-route/dist/*
+          path: |
+            return-route/dist/komari-plugin-return-route-*.zip
+            return-route/dist/return-route-collector-linux-*
+            return-route/dist/SHA256SUMS
 
   release:
     if: github.event_name == 'release' && !github.event.release.prerelease
@@ -72,7 +75,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          test "$RELEASE_TAG" = v0.1.0
+          test "$RELEASE_TAG" = v0.1.1
           cd dist
           sha256sum -c SHA256SUMS
           gh release upload "$RELEASE_TAG" ./*

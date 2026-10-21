@@ -56,6 +56,13 @@ test('atomic persistence survives recreation; history retention removes only old
  fs.writeFileSync(path.join(s.dir,'jobs.json'),'{');assert.throws(()=>createEngine(s.env));
 });
 test('installer pins HTTPS and SHA256; user fields cannot alter the command path',()=>{
- const a={version:'0.1.0'};for(const arch of ['amd64','arm64'])a[arch]={url:'https://github.com/yinpengfei/komari-plugin-return-route/releases/download/v0.1.0/return-route-collector-linux-'+arch,sha256:'a'.repeat(64)};
+ const a={version:'0.1.0'};for(const arch of ['amd64','arm64'])a[arch]={url:'https://github.com/yinpengfei/komari-plugin-return-route/releases/download/v0.1.1/return-route-collector-linux-'+arch,sha256:'a'.repeat(64)};
  const cmd=commands.install(a);assert.ok(cmd.includes('sha256sum -c'));assert.ok(cmd.includes('--proto-redir'));assert.ok(cmd.includes('symlink_refused'));a.amd64.url='https://evil.example/file';assert.throws(()=>commands.install(a));
+});
+
+test('legacy collector results retain conservative destination-only labels with human explanation',async t=>{
+ const s=setup(t),job=s.e.queue('node-a','probe',true);await s.e.pump();const raw=JSON.parse(report(job));
+ for(const row of raw.results)if(row.target.carrier==='CU')row.classification={code:'cu_destination_only',confidence:'inconclusive',label:'untrusted raw label',evidence:'only one AS4837 hop'};
+ Object.assign(s.tasks.get(job.task_id),{exit_code:0,result:JSON.stringify(raw)});await s.e.pump();
+ const cu=s.e.summary('node-a').results.find(r=>r.carrier==='CU');assert.equal(cu.label,'仅见联通目的网');assert.match(cu.explanation,/AS4837/);assert.equal(cu.confidence,'inconclusive');assert.equal(s.e.state.installed['node-a'].version,'0.1.0');
 });

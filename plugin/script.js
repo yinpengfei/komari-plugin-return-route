@@ -26,7 +26,7 @@ function route(method,url,fn,isAdmin=true){server.route(method,BASE+url,async(re
 async function nodes(){const list=await server.call('admin:listClients');if(!Array.isArray(list))throw Error('节点列表无效');return list;}
 async function requireNode(uuid){if(!/^[a-zA-Z0-9_-]{1,100}$/.test(uuid||''))throw Error('无效节点');const list=await nodes();if(!list.some(n=>n.uuid===uuid))throw Error('节点不存在');return uuid;}
 function load(){
- route('GET','/state',async(req,res)=>{const list=await nodes();write(res,200,{version:'0.1.0',configuration,configuration_error:configurationError,presets,nodes:list.map(n=>({uuid:n.uuid,name:n.name,os:n.os,arch:n.arch,hidden:n.hidden})),jobs:engine?engine.state.jobs:[],installed:engine?engine.state.installed:{},summaries:engine?list.map(n=>engine.summary(n.uuid)):[],next_due:engine?engine.state.due:{}});});
+ route('GET','/state',async(req,res)=>{const list=await nodes();write(res,200,{version:'0.1.1',configuration,configuration_error:configurationError,presets,nodes:list.map(n=>({uuid:n.uuid,name:n.name,os:n.os,arch:n.arch,hidden:n.hidden})),jobs:engine?engine.state.jobs:[],installed:engine?engine.state.installed:{},summaries:engine?list.map(n=>engine.summary(n.uuid)):[],next_due:engine?engine.state.due:{}});});
  route('POST','/validate',async(req,res)=>{const c=normalize(JSON.parse(req.body),net);const known=new Set((await nodes()).map(n=>n.uuid));if(c.nodes.some(n=>!known.has(n)))throw Error('配置包含不存在的节点');write(res,200,{configuration:c});});
  route('POST','/refresh',async(req,res)=>{if(!engine)throw Error(configurationError||'尚未就绪');const data=JSON.parse(req.body);if(!Array.isArray(data.nodes)||data.nodes.length>1000||!['probe','install'].includes(data.kind))throw Error('无效任务');const jobs=[];for(const uuid of [...new Set(data.nodes)]){await requireNode(uuid);jobs.push(engine.queue(uuid,data.kind,true));}write(res,202,{jobs:jobs.map(j=>({id:j.id,uuid:j.uuid,status:j.status}))});engine.pump().catch(e=>console.error(e.message));});
  route('GET','/detail',async(req,res)=>{const uuid=await requireNode(req.query.uuid);if(!engine)throw Error('尚未就绪');write(res,200,engine.view(uuid));});
@@ -34,10 +34,10 @@ function load(){
  route('GET','/summary',async(req,res)=>{
   if(!engine){write(res,200,{nodes:[]});return;}
   const settings=await server.call('admin:getSettings');if(settings.private_site&&!admin(req))throw Object.assign(Error('私有站点需要登录'),{status:401});
-  const allowed=(await nodes()).filter(n=>admin(req)||!n.hidden);write(res,200,{nodes:allowed.filter(n=>config().nodes.includes(n.uuid)).map(n=>engine.summary(n.uuid))});
+  const allowed=(await nodes()).filter(n=>admin(req)||!n.hidden),counts=new Map();for(const n of allowed)counts.set(n.name,(counts.get(n.name)||0)+1);write(res,200,{nodes:allowed.filter(n=>config().nodes.includes(n.uuid)).map(n=>Object.assign(engine.summary(n.uuid),{name:n.name,match_by_name:counts.get(n.name)===1}))});
  },false);
  server.static('/plugins/return-route/assets','web');
- server.injectHTML('<link rel="stylesheet" href="/plugins/return-route/assets/style.css">','<script src="/plugins/return-route/assets/home.js" defer></script>');
+ server.injectHTML('<link rel="stylesheet" href="/plugins/return-route/assets/style.css">','<script src="/plugins/return-route/assets/card-adapter.js" defer></script><script src="/plugins/return-route/assets/home.js" defer></script>');
  server.getConfig().then(raw=>{
   try{configuration=normalize(raw,net);engine=createEngine({rpc:(m,p)=>server.call(m,p),storage,config,artifacts,net,id:()=>crypto.randomUUID()});engine.pump().catch(e=>console.error(e.message));
    timer=setInterval(()=>engine.pump().catch(e=>console.error(e.message)),2000);

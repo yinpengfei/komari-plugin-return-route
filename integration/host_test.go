@@ -13,7 +13,7 @@ import (
 )
 
 func TestActualPluginHost(t *testing.T) {
-	archive, _ := filepath.Abs("../dist/komari-plugin-return-route-0.1.0.zip")
+	archive, _ := filepath.Abs("../dist/komari-plugin-return-route-0.1.1.zip")
 	f, e := newFixture(archive)
 	if e != nil {
 		t.Fatal(e)
@@ -76,6 +76,28 @@ func TestActualPluginHost(t *testing.T) {
 		if strings.Contains(public.Body.String(), secret) {
 			t.Fatalf("public leak: %s", secret)
 		}
+	}
+	var summary struct {
+		Nodes []struct {
+			UUID  string `json:"uuid"`
+			Match bool   `json:"match_by_name"`
+		}
+	}
+	if e := json.Unmarshal(public.Body.Bytes(), &summary); e != nil || len(summary.Nodes) == 0 || !summary.Nodes[0].Match {
+		t.Fatalf("unique visible name should match: %s", public.Body.String())
+	}
+	f.duplicateName.Store(true)
+	duplicate := request("GET", "/api/plugins/return-route/summary", "", false, "")
+	_ = json.Unmarshal(duplicate.Body.Bytes(), &summary)
+	for _, n := range summary.Nodes {
+		if n.UUID == "node-a" && n.Match {
+			t.Fatal("unselected same-name node could misattribute a card")
+		}
+	}
+	f.duplicateName.Store(false)
+	icon := request("GET", "/api/admin/plugin/return-route/web/icon.svg", "", true, "")
+	if icon.Code != 200 || !strings.Contains(icon.Body.String(), "<svg") || !strings.Contains(icon.Header().Get("Content-Type"), "image/svg+xml") {
+		t.Fatalf("icon unavailable: %d %s", icon.Code, icon.Body.String())
 	}
 	f.private.Store(true)
 	if w := request("GET", "/api/plugins/return-route/summary", "", false, ""); w.Code != 401 {

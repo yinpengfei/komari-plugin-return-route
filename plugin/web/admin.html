@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>三网回程</title><link rel="stylesheet" href="/plugins/return-route/assets/style.css"></head>
 <body class="rr-admin"><main>
-<header><div><h1>三网回程</h1><p>由节点探测国内目标，记录实际回程证据。</p></div><span class="rr-version">0.1.0 · Linux amd64 / arm64</span></header>
+<header><div><h1>三网回程</h1><p>由节点探测国内目标，记录实际回程证据。</p></div><span class="rr-version">0.1.1 · Linux amd64 / arm64</span></header>
 <div id="notice" role="status" aria-live="polite"></div>
 <section class="rr-panel"><div class="rr-section-head"><h2>检测设置</h2><button id="save" class="rr-primary">保存配置</button></div>
 <div class="rr-fields"><label>自动检测<input id="enabled" type="checkbox"></label><label>检测间隔（分钟）<input id="interval" type="number" min="5" max="10080" value="60"></label><label>历史保留（天）<input id="retention" type="number" min="1" max="365" value="30"></label></div>
@@ -13,6 +13,7 @@
 </section>
 <section class="rr-panel"><div class="rr-section-head"><h2>节点与结果</h2><div class="rr-actions"><button id="install-all">安装／更新已启用节点采集器</button><button id="refresh-all" class="rr-primary">立即更新已启用节点</button></div></div>
 <p class="rr-muted">安装操作从本项目固定版本 Release 下载并校验采集器，仅在主动点击后执行。采集需要原始 ICMP 套接字权限；结果不代表去程或全国所有同运营商用户。</p>
+<details class="rr-help"><summary>“仅见目的网”是什么意思？</summary><p>只识别到一个电信 AS4134 或联通 AS4837 响应跳点，证据不足以确认骨干线路。它不等于线路差、故障或丢包，也不能据此判断 163、4837、9929。中间路由器可能不回复探测；可查看详情中的逐跳证据，或更换同运营商目标后重测。</p></details>
 <div class="rr-scroll"><table><thead><tr><th>节点</th><th>采集器</th><th>回程摘要</th><th>最近状态／下次检测</th><th>操作</th></tr></thead><tbody id="nodes"></tbody></table></div>
 </section>
 <footer>结果保存在 data/plugin-data/return-route，升级插件保留；删除插件会清除。任务输出同时进入 Komari 任务库，按宿主规则清理。</footer>

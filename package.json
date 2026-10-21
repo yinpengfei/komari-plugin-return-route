@@ -1,1 +1,1 @@
-{"name":"komari-plugin-return-route","version":"0.1.0","private":true,"scripts":{"test":"node --test test/*.test.cjs"}}
+{"name": "komari-plugin-return-route", "version": "0.1.1", "private": true, "scripts": {"test": "node --test test/*.test.cjs"}}

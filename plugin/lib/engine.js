@@ -2,6 +2,7 @@
 const {targetKey}=require('./config');
 const commands=require('./commands');
 const labels={ct_cn2_mixed:'CN2 混合',ct_cn2_gia:'CN2（GIA 推测）',ct_cn2_gt:'CN2（GT 推测）',ct_ctgnet:'CTGNET',ct_163:'163',ct_destination_only:'仅见电信目的网',ct_unknown:'未知',cu_9929:'9929',cu_9929_mixed:'9929 混合',cu_cug:'CUG',cu_4837:'4837',cu_destination_only:'仅见联通目的网',cu_unknown:'未知',cm_cmin2:'CMIN2',cm_cmin2_mixed:'CMIN2 混合',cm_cmi:'CMI',cm_cmnet:'CMNET',cm_unknown:'未知',ct_dynamic_mixed:'动态混合',cu_dynamic_mixed:'动态混合',cm_dynamic_mixed:'动态混合'};
+function explanation(code){return code==='cu_destination_only'?'仅识别到一个联通 AS4837 响应跳点，无法据此确认 4837、9929 等骨干线路。':code==='ct_destination_only'?'仅识别到一个电信 AS4134 响应跳点，无法据此确认 163、CN2 等骨干线路。':'没有足够的可识别路径证据，无法确认骨干线路；中间路由器不回复探测不等于业务丢包。';}
 function createEngine(env){
  const {rpc,storage,config,artifacts,net}=env, now=env.now||Date.now;
  const state=storage.jobs(); if(state.schema!==1||!Array.isArray(state.jobs)||!state.due||!state.installed)throw Error('任务状态损坏，请恢复备份');
@@ -95,8 +96,8 @@ function createEngine(env){
    const day=new Date(now()).toISOString().slice(0,10);if(cleanupDay!==day){storage.prune(now(),cfg.history_days);cleanupDay=day;}save();
   }finally{busy=false;}
  }
- function view(uuid){const v=storage.latest(uuid),allowed=new Set(targets().map(targetKey));v.results=v.results.filter(r=>allowed.has(targetKey(r.target)));v.stale=!v.last_success_at||now()-Date.parse(v.last_success_at)>config().interval_minutes*120000;return v;}
- function summary(uuid){const v=view(uuid);return {uuid,stale:v.stale,last_attempt:v.last_attempt?{at:v.last_attempt.at,status:v.last_attempt.status}:null,running:!!active(uuid),results:v.results.map(r=>({carrier:r.target.carrier,family:r.target.family,target_name:r.target.name,region:r.target.region,label:r.classification.label,confidence:r.classification.confidence,observed_at:r.observed_at,expires_at:new Date(Date.parse(r.observed_at)+config().interval_minutes*120000).toISOString(),partial:r.status==='partial'}))};}
+ function view(uuid){const v=storage.latest(uuid),allowed=new Set(targets().map(targetKey));v.results=v.results.filter(r=>allowed.has(targetKey(r.target))).map(r=>Object.assign({},r,{classification:Object.assign({},r.classification,{label:labels[r.classification.code]||'未知'})}));v.stale=!v.last_success_at||now()-Date.parse(v.last_success_at)>config().interval_minutes*120000;return v;}
+ function summary(uuid){const v=view(uuid);return {uuid,stale:v.stale,last_attempt:v.last_attempt?{at:v.last_attempt.at,status:v.last_attempt.status}:null,running:!!active(uuid),results:v.results.map(r=>({carrier:r.target.carrier,family:r.target.family,target_name:r.target.name,region:r.target.region,label:r.classification.label,code:r.classification.code,explanation:r.classification.confidence==='inconclusive'?explanation(r.classification.code):'',confidence:r.classification.confidence,observed_at:r.observed_at,expires_at:new Date(Date.parse(r.observed_at)+config().interval_minutes*120000).toISOString(),partial:r.status==='partial'}))};}
  return {state,queue,pump,view,summary,validReport,stop(){stopped=true;save();}};
 }
 module.exports={createEngine,labels};

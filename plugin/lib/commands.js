@@ -6,7 +6,7 @@ function install(artifacts){
   if(artifacts.version!=='0.1.0')throw Error('invalid collector metadata');
   for(const arch of ['amd64','arm64']){
     const item=artifacts[arch];
-    if(!item||!/^([a-f0-9]{64})$/.test(item.sha256)||item.url!=='https://github.com/yinpengfei/komari-plugin-return-route/releases/download/v0.1.0/return-route-collector-linux-'+arch)throw Error('invalid release artifact');
+    if(!item||!/^([a-f0-9]{64})$/.test(item.sha256)||item.url!=='https://github.com/yinpengfei/komari-plugin-return-route/releases/download/v0.1.1/return-route-collector-linux-'+arch)throw Error('invalid release artifact');
   }
   return [
     'set -eu','umask 077','[ "$(uname -s)" = Linux ] || { echo unsupported_system; exit 1; }',
