@@ -1,0 +1,19 @@
+{
+ "name":"三网回程",
+ "short":"return-route",
+ "description":"可配置时间和三网 IPv4/IPv6 目标的回程检测，支持后台手动更新与默认主题卡片展示。",
+ "author":"yinpengfei",
+ "version":"0.1.0",
+ "url":"https://github.com/yinpengfei/komari-plugin-return-route",
+ "komari":">=1.5.2",
+ "entry":"script.js",
+ "permissions":{"node":true,"allowSystemRPC":true,"allowRoutes":true,"allowHTMLInject":true,"maxHTTPBodyBytes":1048576,"timeout":30},
+ "pages":[{"file":"web/admin.html","title":"三网回程","icon":"Route","type":"iframe","visibility":"admin"}],
+ "configuration":{"type":"managed","data":[
+  {"key":"enabled","name":"自动检测","type":"switch","default":true},
+  {"key":"interval_minutes","name":"检测间隔（分钟）","type":"number","default":60,"help":"5–10080，默认每小时。节点会错开执行，不与手动任务重叠。"},
+  {"key":"history_days","name":"历史保留天数","type":"number","default":30},
+  {"key":"nodes","name":"检测节点","type":"nodes","default":"[]"},
+  {"key":"targets","name":"三网目标（JSON）","type":"textbox","help":"可在三网回程页面使用表格编辑。空缺的地址族不检测。"}
+ ]}
+}

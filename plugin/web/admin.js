@@ -1,0 +1,33 @@
+'use strict';
+(()=>{
+ const BASE='/api/plugins/return-route',q=s=>document.querySelector(s);let state,detailUUID,initialized=false;
+ function el(tag,text,cls){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;}
+ function message(text,error=false){q('#notice').textContent=text;q('#notice').className=error?'rr-notice rr-error':'rr-notice';}
+ async function api(path,body){const options={credentials:'same-origin',cache:'no-store'};if(body!==undefined)Object.assign(options,{method:'POST',headers:{'Content-Type':'application/json','X-Komari-Return-Route':'1','X-Return-Route-Origin':location.origin},body:JSON.stringify(body)});const r=await fetch(BASE+path,options),data=await r.json();if(!r.ok)throw Error(data.error||'操作失败');return data;}
+ function time(t){return t?new Date(t).toLocaleString():'—';}
+ function targetRow(t={}){
+  const tr=el('tr');tr.dataset.id=t.id||'t-'+crypto.randomUUID().slice(0,12);
+  const select=(values,current)=>{const s=el('select');for(const [v,label] of values){const o=el('option',label);o.value=v;s.append(o);}s.value=String(current);return s;};
+  const input=(value,label)=>{const i=el('input');i.value=value||'';i.setAttribute('aria-label',label);return i;};
+  const controls=[select([['CT','电信'],['CU','联通'],['CM','移动']],t.carrier||'CT'),input(t.region,'目标地区'),input(t.name,'目标名称'),select([[4,'IPv4'],[6,'IPv6']],t.family||4),input(t.address,'目标 IP')];
+  for(const c of controls){const td=el('td');td.append(c);tr.append(td);}
+  const td=el('td'),remove=el('button','移除');remove.onclick=()=>tr.remove();td.append(remove);tr.append(td);q('#targets').append(tr);
+ }
+ function targets(){return [...q('#targets').rows].map(tr=>{const v=[...tr.querySelectorAll('input,select')].map(e=>e.value);return {id:tr.dataset.id,carrier:v[0],region:v[1],name:v[2],family:Number(v[3]),address:v[4].trim()};}).filter(t=>t.address);}
+ function initForm(){const c=state.configuration||{};q('#enabled').checked=c.enabled!==false;q('#interval').value=c.interval_minutes||60;q('#retention').value=c.history_days||30;q('#targets').replaceChildren();for(const t of JSON.parse(c.targets||JSON.stringify(state.presets.beijing)))targetRow(t);q('#node-options').replaceChildren();for(const n of state.nodes){const label=el('label'),check=el('input');check.type='checkbox';check.value=n.uuid;check.checked=(c.nodes||[]).includes(n.uuid);label.append(check,document.createTextNode(n.name||n.uuid));q('#node-options').append(label);}initialized=true;}
+ async function action(kind,ids){try{if(!ids.length)throw Error('请先选择节点并保存配置');await api('/refresh',{kind,nodes:ids});message(kind==='install'?'安装任务已排队，校验通过后才替换采集器。':'检测已排队，通常几分钟内完成。');await refresh();}catch(e){message(e.message,true);}}
+ const status={queued:'排队中',dispatching:'下发中',running:'检测中',success:'已完成',failed:'失败',canceled:'已取消'};
+ function renderNodes(){const tbody=q('#nodes');tbody.replaceChildren();for(const n of state.nodes){const tr=el('tr'),enabled=(state.configuration?.nodes||[]).includes(n.uuid),sum=state.summaries?.find(s=>s.uuid===n.uuid),jobs=state.jobs.filter(j=>j.uuid===n.uuid),active=jobs.find(j=>['queued','dispatching','running'].includes(j.status)),last=active||jobs[jobs.length-1];
+  const name=el('td');name.append(el('strong',n.name||n.uuid),el('small',[n.os,n.arch,n.hidden?'隐藏节点':''].filter(Boolean).join(' · '),'rr-muted'));tr.append(name);
+  tr.append(el('td',state.installed[n.uuid]?'v'+state.installed[n.uuid].version:'未安装／未登记'));
+  const summary=el('td');if(sum?.results?.length){for(const r of sum.results){summary.append(el('div',`${r.family===4?'V4':'V6'} ${r.region} ${r.carrier}: ${r.label}`));}if(sum.stale)summary.append(el('small','结果已过期','rr-warning'));}else summary.textContent='待检测';tr.append(summary);
+  const info=el('td');info.append(el('div',last?(last.status==='running'&&last.kind==='install'?'安装中':status[last.status]||last.status):'未执行'),el('small',time(last?.finished_at),'rr-muted'));if(last?.error)info.append(el('small',last.error,'rr-error'));info.append(el('small','下次：'+time(state.next_due?.[n.uuid]),'rr-muted'));tr.append(info);
+  const td=el('td');td.className='rr-actions';for(const [text,fn] of [['安装／更新',()=>action('install',[n.uuid])],['立即更新',()=>action('probe',[n.uuid])],['详情',()=>showDetail(n)]]){const b=el('button',text);b.disabled=!enabled||(!!active&&text!=='详情');b.onclick=fn;td.append(b);}tr.append(td);tbody.append(tr);
+ }}
+ async function refresh(){try{state=await api('/state');if(!initialized)initForm();renderNodes();if(state.configuration_error)message(state.configuration_error,true);}catch(e){message(e.message,true);}}
+ async function showDetail(n){try{detailUUID=n.uuid;q('#detail-title').textContent=(n.name||n.uuid)+' · 回程证据';q('#history-day').value=new Date().toISOString().slice(0,10);q('#detail-content').textContent=JSON.stringify(await api('/detail?uuid='+encodeURIComponent(n.uuid)),null,2);q('#detail').showModal();}catch(e){message(e.message,true);}}
+ q('#save').onclick=async()=>{const button=q('#save');button.disabled=true;try{const c={enabled:q('#enabled').checked,interval_minutes:Number(q('#interval').value),history_days:Number(q('#retention').value),nodes:[...q('#node-options').querySelectorAll('input:checked')].map(e=>e.value),targets:JSON.stringify(targets())};const valid=await api('/validate',c);valid.configuration.nodes=JSON.stringify(valid.configuration.nodes);const res=await fetch('/api/rpc2',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:Date.now(),method:'admin:setPluginConfiguration',params:{short:'return-route',data:valid.configuration}})});const data=await res.json();if(!res.ok||data.error)throw Error(data.error?.message||'保存失败');message('配置已保存，定时检测在后台运行。');initialized=false;await refresh();}catch(e){message(e.message,true);}finally{button.disabled=false;}};
+ q('#use-preset').onclick=()=>{q('#targets').replaceChildren();for(const t of state.presets[q('#preset').value])targetRow(t);message('预置已填入，保存后生效。');};q('#add-target').onclick=()=>targetRow();
+ q('#install-all').onclick=()=>action('install',state?.configuration?.nodes||[]);q('#refresh-all').onclick=()=>action('probe',state?.configuration?.nodes||[]);q('#close-detail').onclick=()=>q('#detail').close();q('#load-history').onclick=async()=>{try{q('#detail-content').textContent=JSON.stringify(await api('/history?uuid='+encodeURIComponent(detailUUID)+'&day='+q('#history-day').value),null,2);}catch(e){message(e.message,true);}};
+ refresh();setInterval(()=>{if(!document.hidden)refresh();},3000);
+})();

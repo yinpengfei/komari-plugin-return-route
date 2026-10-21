@@ -1,0 +1,26 @@
+{
+  "beijing": [
+    {"id":"ct4","carrier":"CT","name":"北京电信","region":"北京","family":4,"address":"219.141.140.10"},
+    {"id":"cu4","carrier":"CU","name":"北京联通","region":"北京","family":4,"address":"202.106.195.68"},
+    {"id":"cm4","carrier":"CM","name":"北京移动","region":"北京","family":4,"address":"221.179.155.161"},
+    {"id":"ct6","carrier":"CT","name":"北京电信","region":"北京","family":6,"address":"2400:89c0:1053:3::69"},
+    {"id":"cu6","carrier":"CU","name":"北京联通","region":"北京","family":6,"address":"2400:89c0:1013:3::54"},
+    {"id":"cm6","carrier":"CM","name":"北京移动","region":"北京","family":6,"address":"2409:8c00:8421:1303::55"}
+  ],
+  "shanghai": [
+    {"id":"ct4","carrier":"CT","name":"上海电信","region":"上海","family":4,"address":"202.96.209.133"},
+    {"id":"cu4","carrier":"CU","name":"上海联通","region":"上海","family":4,"address":"210.22.97.1"},
+    {"id":"cm4","carrier":"CM","name":"上海移动","region":"上海","family":4,"address":"211.136.112.200"},
+    {"id":"ct6","carrier":"CT","name":"上海电信","region":"上海","family":6,"address":"240e:e1:aa00:4000::24"},
+    {"id":"cu6","carrier":"CU","name":"上海联通","region":"上海","family":6,"address":"2408:80f1:21:5003::a"},
+    {"id":"cm6","carrier":"CM","name":"上海移动","region":"上海","family":6,"address":"2409:8c1e:75b0:3003::26"}
+  ],
+  "guangzhou": [
+    {"id":"ct4","carrier":"CT","name":"广州电信","region":"广州","family":4,"address":"58.60.188.222"},
+    {"id":"cu4","carrier":"CU","name":"广州联通","region":"广州","family":4,"address":"210.21.196.6"},
+    {"id":"cm4","carrier":"CM","name":"广州移动","region":"广州","family":4,"address":"120.196.165.24"},
+    {"id":"ct6","carrier":"CT","name":"广州电信","region":"广州","family":6,"address":"240e:97c:2f:3000::44"},
+    {"id":"cu6","carrier":"CU","name":"广州联通","region":"广州","family":6,"address":"2408:8756:f50:1001::c"},
+    {"id":"cm6","carrier":"CM","name":"广州移动","region":"广州","family":6,"address":"2409:8c54:871:1001::12"}
+  ]
+}

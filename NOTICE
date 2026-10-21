@@ -1,0 +1,12 @@
+Komari Return Route, copyright 2026 yinpengfei and contributors.
+Licensed under Apache License 2.0.
+
+internal/probe/route_classification.go, its tests, ipv4_asn.go,
+ipv6_asn.go and prefix/*.txt are adapted from oneclickvirt/backtrace,
+https://github.com/oneclickvirt/backtrace at
+6c2b9ff7fe77c83132b9a141f118d8667d4e864c, Apache-2.0.
+The original classification logic is retained; this project labels premium
+classes as inferred, not independently verified commercial product tiers.
+IPv4 detection uses the upstream curated network heuristics; IPv6 uses the
+bundled prefix snapshot. Neither is an authoritative live BGP AS_PATH.
+No upstream runtime auto-refresh, public API, CDN or target discovery is used.

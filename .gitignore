@@ -1,0 +1,9 @@
+dist/
+node_modules/
+plugin/artifacts.json
+integration/go.sum
+integration/host
+integration/host.exe
+integration/data/
+*.exe
+.zig-cache/

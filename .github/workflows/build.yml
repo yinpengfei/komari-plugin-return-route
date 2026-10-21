@@ -1,0 +1,78 @@
+name: Test and package
+on:
+  push:
+    branches: [main]
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: return-route
+      - uses: actions/checkout@v4
+        with:
+          repository: yinpengfei/komari
+          ref: '1.5.2'
+          path: repo
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.11'
+          cache-dependency-path: return-route/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Collector and rule tests
+        working-directory: return-route
+        run: go test -race ./...
+      - name: Native Linux IPv4 and IPv6 ICMP smoke
+        working-directory: return-route
+        run: sudo env RR_ICMP_SMOKE=1 GOCACHE="$RUNNER_TEMP/rr-smoke" GOMODCACHE="$(go env GOMODCACHE)" "$(go env GOROOT)/bin/go" test -count=1 ./internal/probe -run TestLinuxICMPSmoke -v
+      - name: Scheduler, privacy and storage tests
+        working-directory: return-route
+        run: node --test test/*.test.cjs
+      - name: Package collectors and plugin
+        working-directory: return-route
+        run: python3 scripts/package.py
+      - name: Actual Komari plugin-host integration
+        working-directory: return-route/integration
+        run: |
+          go mod tidy
+          go test -race -v ./...
+      - uses: actions/upload-artifact@v4
+        with:
+          name: return-route-${{ runner.arch }}
+          path: return-route/dist/*
+
+  release:
+    if: github.event_name == 'release' && !github.event.release.prerelease
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: return-route-X64
+          path: dist
+      - name: Verify and publish artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          test "$RELEASE_TAG" = v0.1.0
+          cd dist
+          sha256sum -c SHA256SUMS
+          gh release upload "$RELEASE_TAG" ./*

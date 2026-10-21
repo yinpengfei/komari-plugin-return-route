@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>三网回程</title><link rel="stylesheet" href="/plugins/return-route/assets/style.css"></head>
+<body class="rr-admin"><main>
+<header><div><h1>三网回程</h1><p>由节点探测国内目标，记录实际回程证据。</p></div><span class="rr-version">0.1.0 · Linux amd64 / arm64</span></header>
+<div id="notice" role="status" aria-live="polite"></div>
+<section class="rr-panel"><div class="rr-section-head"><h2>检测设置</h2><button id="save" class="rr-primary">保存配置</button></div>
+<div class="rr-fields"><label>自动检测<input id="enabled" type="checkbox"></label><label>检测间隔（分钟）<input id="interval" type="number" min="5" max="10080" value="60"></label><label>历史保留（天）<input id="retention" type="number" min="1" max="365" value="30"></label></div>
+<p class="rr-muted">手动更新与定时检测共用队列。保存后生效；已有任务继续收尾。关闭远程任务的节点无法检测。</p>
+<div class="rr-section-head"><h3>三网目标 IP</h3><div class="rr-actions"><select id="preset" aria-label="目标预置"><option value="beijing">北京三网</option><option value="shanghai">上海三网</option><option value="guangzhou">广州三网</option></select><button id="use-preset">填入预置</button><button id="add-target">添加目标</button></div></div>
+<div class="rr-scroll"><table><thead><tr><th>运营商</th><th>地区</th><th>名称</th><th>协议</th><th>目标 IP</th><th></th></tr></thead><tbody id="targets"></tbody></table></div>
+<p class="rr-muted">可以修改或移除预置地址；IPv4/IPv6 独立检测。目标只接受公网 IP，不使用域名或第三方自动目标查询。预置可用性以实际检测为准。</p>
+<h3>启用节点</h3><div id="node-options" class="rr-node-options"></div>
+</section>
+<section class="rr-panel"><div class="rr-section-head"><h2>节点与结果</h2><div class="rr-actions"><button id="install-all">安装／更新已启用节点采集器</button><button id="refresh-all" class="rr-primary">立即更新已启用节点</button></div></div>
+<p class="rr-muted">安装操作从本项目固定版本 Release 下载并校验采集器，仅在主动点击后执行。采集需要原始 ICMP 套接字权限；结果不代表去程或全国所有同运营商用户。</p>
+<div class="rr-scroll"><table><thead><tr><th>节点</th><th>采集器</th><th>回程摘要</th><th>最近状态／下次检测</th><th>操作</th></tr></thead><tbody id="nodes"></tbody></table></div>
+</section>
+<footer>结果保存在 data/plugin-data/return-route，升级插件保留；删除插件会清除。任务输出同时进入 Komari 任务库，按宿主规则清理。</footer>
+<dialog id="detail"><div class="rr-section-head"><h2 id="detail-title">检测详情</h2><button id="close-detail">关闭</button></div><div class="rr-actions"><label>历史日期 <input id="history-day" type="date"></label><button id="load-history">查看历史（最近 100 条）</button></div><pre id="detail-content"></pre></dialog>
+</main><script src="/plugins/return-route/assets/admin.js" defer></script></body></html>
