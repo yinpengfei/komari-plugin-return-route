@@ -289,7 +289,7 @@ func newFixture(archive string, themeDirs ...string) (*fixture, error) {
 }
 func (f *fixture) close() { _ = plugin.CloseAll(); _ = os.RemoveAll(f.dir) }
 func main() {
-	archive := flag.String("plugin-zip", "../dist/komari-plugin-return-route-0.1.1.zip", "plugin ZIP")
+	archive := flag.String("plugin-zip", "../dist/komari-plugin-return-route-0.1.2.zip", "plugin ZIP")
 	themeDir := flag.String("theme-dist", "", "optional upstream theme dist for local browser checks")
 	listen := flag.String("listen", "127.0.0.1:5371", "local-only address")
 	flag.Parse()

@@ -13,7 +13,7 @@ import (
 )
 
 func TestActualPluginHost(t *testing.T) {
-	archive, _ := filepath.Abs("../dist/komari-plugin-return-route-0.1.1.zip")
+	archive, _ := filepath.Abs("../dist/komari-plugin-return-route-0.1.2.zip")
 	f, e := newFixture(archive)
 	if e != nil {
 		t.Fatal(e)

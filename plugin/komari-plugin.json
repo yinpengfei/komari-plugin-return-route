@@ -3,7 +3,7 @@
   "short": "return-route",
   "description": "可配置时间和三网 IPv4/IPv6 目标的回程检测，支持后台手动更新、默认主题与 Glassmorphism 三网主题卡片。",
   "author": "yinpengfei",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "url": "https://github.com/yinpengfei/komari-plugin-return-route",
   "komari": ">=1.5.2",
   "entry": "script.js",

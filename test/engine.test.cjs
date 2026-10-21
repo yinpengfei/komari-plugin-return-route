@@ -56,7 +56,7 @@ test('atomic persistence survives recreation; history retention removes only old
  fs.writeFileSync(path.join(s.dir,'jobs.json'),'{');assert.throws(()=>createEngine(s.env));
 });
 test('installer pins HTTPS and SHA256; user fields cannot alter the command path',()=>{
- const a={version:'0.1.0'};for(const arch of ['amd64','arm64'])a[arch]={url:'https://github.com/yinpengfei/komari-plugin-return-route/releases/download/v0.1.1/return-route-collector-linux-'+arch,sha256:'a'.repeat(64)};
+ const a={version:'0.1.0'};for(const arch of ['amd64','arm64'])a[arch]={url:'https://github.com/yinpengfei/komari-plugin-return-route/releases/download/v0.1.2/return-route-collector-linux-'+arch,sha256:'a'.repeat(64)};
  const cmd=commands.install(a);assert.ok(cmd.includes('sha256sum -c'));assert.ok(cmd.includes('--proto-redir'));assert.ok(cmd.includes('symlink_refused'));a.amd64.url='https://evil.example/file';assert.throws(()=>commands.install(a));
 });
 
